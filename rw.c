@@ -178,6 +178,54 @@ xgcd(mpz_t u, mpz_t v, mpz_t ip, mpz_t iq) {
   mpz_clear(t);
 }
 
+// -----------------------------------------------------------------------------
+// Calculate a compressed Rabin signature (see Compressing Rabin Signatures,
+// Daniel Bleichenbacher)
+//
+// zsig: (output) the resulting signature
+// s: the Rabin signature
+// n: the composite group order
+// -----------------------------------------------------------------------------
+static void
+signature_compress(mpz_t zsig, mpz_t s, mpz_t n) {
+  mpz_t vs[4];
+  mpz_init_set_ui(vs[0], 0);
+  mpz_init_set_ui(vs[1], 1);
+  mpz_init(vs[2]);
+  mpz_init(vs[3]);
+
+  mpz_t root;
+  mpz_init(root);
+  mpz_sqrt(root, n);
+
+  mpz_t cf;
+  mpz_init(cf);
+
+  unsigned i = 1;
+
+  do {
+    i = (i + 1) & 3;
+
+    if (i & 1) {
+      mpz_fdiv_qr(cf, s, s, n);
+    } else {
+      mpz_fdiv_qr(cf, n, n, s);
+    }
+    mpz_mul(vs[i], vs[(i-1)&3], cf);
+    mpz_add(vs[i], vs[i], vs[(i-2)&3]);
+  } while (mpz_cmp(vs[i], root) < 0);
+
+  mpz_init(zsig);
+  mpz_set(zsig, vs[(i-1) & 3]);
+
+  mpz_clear(root);
+  mpz_clear(cf);
+  mpz_clear(vs[0]);
+  mpz_clear(vs[1]);
+  mpz_clear(vs[2]);
+  mpz_clear(vs[3]);
+}
+
 int
 main() {
   const int urfd = open("/dev/urandom", O_RDONLY);
@@ -278,19 +326,37 @@ main() {
 
   print("  sig:", proot);
 
-  fprintf(stderr, "Performing 1000000 verifications\n");
+  fprintf(stderr, "Compressing signature...\n");
 
+  mpz_t zsig;
+  mpz_t ncopy;
+  mpz_init_set(ncopy, n);
+  signature_compress(zsig, proot, ncopy);
+
+  print("  zsig:", zsig);
+
+  mpz_t zsigcopy, t, t2;
+
+  mpz_init(t);
+  mpz_init(t2);
+  mpz_init(zsigcopy);
+
+  fprintf(stderr, "Performing 1000000 verifications\n");
   const uint64_t start_time = time_now();
   unsigned i;
-  mpz_t temp;
-  mpz_init(temp);
   for (i = 0; i < 1000000; ++i) {
-    mpz_mul(temp, proot, proot);
-    mpz_mod(temp, temp, n);
+    mpz_set(zsigcopy, zsig);
+    mpz_mul(zsigcopy, zsigcopy, zsigcopy);
+    mpz_mul(zsigcopy, zsigcopy, e);
+    mpz_mod(zsigcopy, zsigcopy, n);
 
-    if (mpz_cmp(temp, e))
+    mpz_sqrt(t, zsigcopy);
+    mpz_mul(t2, t, t);
+
+    if (mpz_cmp(t2, zsigcopy))
       abort();
   }
+
   const uint64_t end_time = time_now();
   fprintf(stderr, "verify time: %f\n", ((double) (end_time - start_time)) / 1000000);
 
