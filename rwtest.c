@@ -26,6 +26,9 @@ time_now() {
 
   return r;
 }
+
+#define N 64
+
 int
 main(int argc, char **argv) {
   fprintf(stderr, "Generating keypair...\n");
@@ -35,9 +38,10 @@ main(int argc, char **argv) {
 
   crypto_sign_rwb0fuz1024_gmp_keypair(pk, sk);
 
-  uint8_t input[64];
-  uint8_t output[64 + crypto_sign_rwb0fuz1024_gmp_BYTES];
-  memset(input, 42, sizeof(input));
+  uint8_t input[N];
+  uint8_t result[N];
+  uint8_t output[N + crypto_sign_rwb0fuz1024_gmp_BYTES];
+  memset(input, 42, N);
 
   fprintf(stderr, "Signing...\n");
 
@@ -60,7 +64,7 @@ main(int argc, char **argv) {
 
   start_time = time_now();
   for (i = 0; i < verify_its; ++i) {
-    if (crypto_sign_rwb0fuz1024_gmp_open(input, &inputlen,
+    if (crypto_sign_rwb0fuz1024_gmp_open(result, &inputlen,
                                          output, sizeof(output), pk))
       abort();
   }

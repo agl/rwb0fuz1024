@@ -710,7 +710,7 @@ crypto_sign_rwb0fuz1024_gmp_open(unsigned char *m, unsigned long long *mlen,
   @<Verify compressed signature@>@;
 
   *mlen = smlen - BYTES;
-  memcpy(m, sm, *mlen);
+  memcpy(m, sm + BYTES, *mlen);
 
 out:
   mpz_clear(zsig);

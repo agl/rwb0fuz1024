@@ -3,13 +3,13 @@
 #define BYTES 65 \
 
 /*1:*/
-#line 27 "rwb0fuz1024.w"
+#line 30 "rwb0fuz1024.w"
 
 /*3:*/
-#line 64 "rwb0fuz1024.w"
+#line 67 "rwb0fuz1024.w"
 
 /*2:*/
-#line 38 "rwb0fuz1024.w"
+#line 41 "rwb0fuz1024.w"
 
 #include <stdint.h> 
 #include <limits.h> 
@@ -17,7 +17,7 @@
 #include <string.h> 
 
 /*:2*/
-#line 65 "rwb0fuz1024.w"
+#line 68 "rwb0fuz1024.w"
 
 
 #include <gmp.h> 
@@ -26,13 +26,13 @@
 extern void randombytes(uint8_t*buffer,unsigned long long length);
 
 /*:3*/
-#line 28 "rwb0fuz1024.w"
+#line 31 "rwb0fuz1024.w"
 
 /*4:*/
-#line 78 "rwb0fuz1024.w"
+#line 81 "rwb0fuz1024.w"
 
 /*5:*/
-#line 98 "rwb0fuz1024.w"
+#line 101 "rwb0fuz1024.w"
 
 static void
 init_random_prime(mpz_t n,unsigned size,unsigned mod8){
@@ -68,10 +68,10 @@ break;
 }
 
 /*:5*/
-#line 79 "rwb0fuz1024.w"
+#line 82 "rwb0fuz1024.w"
 
 /*16:*/
-#line 360 "rwb0fuz1024.w"
+#line 363 "rwb0fuz1024.w"
 
 static void
 hash(mpz_t e,const uint8_t*m,unsigned mlen){
@@ -97,10 +97,10 @@ mpz_import(e,128,1,1,1,0,element);
 }
 
 /*:16*/
-#line 80 "rwb0fuz1024.w"
+#line 83 "rwb0fuz1024.w"
 
 /*27:*/
-#line 597 "rwb0fuz1024.w"
+#line 600 "rwb0fuz1024.w"
 
 static uint8_t
 HMAC_SHA512(const uint8_t*key,
@@ -131,10 +131,10 @@ return t[0];
 }
 
 /*:27*/
-#line 81 "rwb0fuz1024.w"
+#line 84 "rwb0fuz1024.w"
 
 /*12:*/
-#line 230 "rwb0fuz1024.w"
+#line 233 "rwb0fuz1024.w"
 
 static void
 xgcd(mpz_t u,mpz_t v,mpz_t ip,mpz_t iq){
@@ -178,17 +178,17 @@ mpz_clear(t);
 }
 
 /*:12*/
-#line 82 "rwb0fuz1024.w"
+#line 85 "rwb0fuz1024.w"
 
 /*6:*/
-#line 139 "rwb0fuz1024.w"
+#line 142 "rwb0fuz1024.w"
 
 int
 crypto_sign_rwb0fuz1024_gmp_keypair(uint8_t*pk,uint8_t*sk){
 mpz_t p,q,n;
 
 /*7:*/
-#line 159 "rwb0fuz1024.w"
+#line 162 "rwb0fuz1024.w"
 
 for(;;){
 init_random_prime(p,512,3);
@@ -206,29 +206,29 @@ break;
 }
 
 /*:7*/
-#line 144 "rwb0fuz1024.w"
+#line 147 "rwb0fuz1024.w"
 
 /*8:*/
-#line 180 "rwb0fuz1024.w"
+#line 183 "rwb0fuz1024.w"
 
 mpz_t u,v;
 xgcd(u,v,p,q);
 mpz_mul(u,u,p);
 
 /*:8*/
-#line 145 "rwb0fuz1024.w"
+#line 148 "rwb0fuz1024.w"
 
 /*9:*/
-#line 190 "rwb0fuz1024.w"
+#line 193 "rwb0fuz1024.w"
 
 uint8_t hmac_secret[8];
 randombytes(hmac_secret,sizeof(hmac_secret));
 
 /*:9*/
-#line 146 "rwb0fuz1024.w"
+#line 149 "rwb0fuz1024.w"
 
 /*10:*/
-#line 204 "rwb0fuz1024.w"
+#line 207 "rwb0fuz1024.w"
 
 memset(sk,0,SECRETKEYBYTES);
 mpz_export(sk,NULL,-1,8,-1,0,p);
@@ -241,10 +241,10 @@ memset(pk,0,PUBLICKEYBYTES);
 mpz_export(pk,NULL,-1,8,-1,0,n);
 
 /*:10*/
-#line 147 "rwb0fuz1024.w"
+#line 150 "rwb0fuz1024.w"
 
 /*11:*/
-#line 215 "rwb0fuz1024.w"
+#line 218 "rwb0fuz1024.w"
 
 mpz_clear(p);
 mpz_clear(q);
@@ -253,24 +253,24 @@ mpz_clear(u);
 mpz_clear(v);
 
 /*:11*/
-#line 148 "rwb0fuz1024.w"
+#line 151 "rwb0fuz1024.w"
 
 
 return 0;
 }
 
 /*:6*/
-#line 83 "rwb0fuz1024.w"
+#line 86 "rwb0fuz1024.w"
 
 
 /*:4*/
-#line 29 "rwb0fuz1024.w"
+#line 32 "rwb0fuz1024.w"
 
 /*13:*/
-#line 274 "rwb0fuz1024.w"
+#line 277 "rwb0fuz1024.w"
 
 /*26:*/
-#line 568 "rwb0fuz1024.w"
+#line 571 "rwb0fuz1024.w"
 
 static int
 is_quadratic_residue(mpz_t e,mpz_t p,mpz_t power){
@@ -292,10 +292,10 @@ return result;
 }
 
 /*:26*/
-#line 275 "rwb0fuz1024.w"
+#line 278 "rwb0fuz1024.w"
 
 /*28:*/
-#line 647 "rwb0fuz1024.w"
+#line 650 "rwb0fuz1024.w"
 
 static void
 signature_compress(mpz_t zsig,mpz_t s,mpz_t n){
@@ -338,10 +338,10 @@ mpz_clear(vs[3]);
 }
 
 /*:28*/
-#line 276 "rwb0fuz1024.w"
+#line 279 "rwb0fuz1024.w"
 
 /*14:*/
-#line 286 "rwb0fuz1024.w"
+#line 289 "rwb0fuz1024.w"
 
 int
 crypto_sign_rwb0fuz1024_gmp(uint8_t*sm,unsigned long long*smlen,
@@ -350,7 +350,7 @@ const uint8_t*sk){
 mpz_t p,q,u,v,n;
 
 /*15:*/
-#line 314 "rwb0fuz1024.w"
+#line 317 "rwb0fuz1024.w"
 
 mpz_init(p);
 mpz_init(q);
@@ -370,19 +370,19 @@ mpz_set_ui(v,1);
 mpz_sub(v,v,u);
 
 /*:15*/
-#line 293 "rwb0fuz1024.w"
+#line 296 "rwb0fuz1024.w"
 
 /*17:*/
-#line 384 "rwb0fuz1024.w"
+#line 387 "rwb0fuz1024.w"
 
 mpz_t elem;
 hash(elem,m,mlen);
 
 /*:17*/
-#line 294 "rwb0fuz1024.w"
+#line 297 "rwb0fuz1024.w"
 
 /*18:*/
-#line 396 "rwb0fuz1024.w"
+#line 399 "rwb0fuz1024.w"
 
 mpz_t pp1over4,qp1over4;
 
@@ -398,10 +398,10 @@ int a= is_quadratic_residue(elem,p,pp1over4);
 int b= is_quadratic_residue(elem,q,qp1over4);
 
 /*:18*/
-#line 295 "rwb0fuz1024.w"
+#line 298 "rwb0fuz1024.w"
 
 /*19:*/
-#line 438 "rwb0fuz1024.w"
+#line 441 "rwb0fuz1024.w"
 
 int mul_2= 0,negate= 0;
 
@@ -414,10 +414,10 @@ if(!a)
 negate= 1;
 
 /*:19*/
-#line 296 "rwb0fuz1024.w"
+#line 299 "rwb0fuz1024.w"
 
 /*20:*/
-#line 454 "rwb0fuz1024.w"
+#line 457 "rwb0fuz1024.w"
 
 if(negate)
 mpz_neg(elem,elem);
@@ -429,18 +429,18 @@ if(negate||mul_2)
 mpz_mod(elem,elem,n);
 
 /*:20*/
-#line 297 "rwb0fuz1024.w"
+#line 300 "rwb0fuz1024.w"
 
 /*21:*/
-#line 478 "rwb0fuz1024.w"
+#line 481 "rwb0fuz1024.w"
 
 const uint8_t r= HMAC_SHA512(sk+257,m,mlen);
 
 /*:21*/
-#line 298 "rwb0fuz1024.w"
+#line 301 "rwb0fuz1024.w"
 
 /*22:*/
-#line 501 "rwb0fuz1024.w"
+#line 504 "rwb0fuz1024.w"
 
 mpz_t proot,qroot;
 
@@ -461,19 +461,19 @@ mpz_add(proot,proot,qroot);
 mpz_mod(proot,proot,n);
 
 /*:22*/
-#line 299 "rwb0fuz1024.w"
+#line 302 "rwb0fuz1024.w"
 
 /*23:*/
-#line 524 "rwb0fuz1024.w"
+#line 527 "rwb0fuz1024.w"
 
 mpz_t zsig;
 signature_compress(zsig,proot,n);
 
 /*:23*/
-#line 300 "rwb0fuz1024.w"
+#line 303 "rwb0fuz1024.w"
 
 /*24:*/
-#line 536 "rwb0fuz1024.w"
+#line 539 "rwb0fuz1024.w"
 
 memset(sm,0,BYTES-1);
 sm[BYTES-1]= (mul_2<<1)|negate;
@@ -482,10 +482,10 @@ memcpy(sm+BYTES,m,mlen);
 *smlen= mlen+BYTES;
 
 /*:24*/
-#line 301 "rwb0fuz1024.w"
+#line 304 "rwb0fuz1024.w"
 
 /*25:*/
-#line 543 "rwb0fuz1024.w"
+#line 546 "rwb0fuz1024.w"
 
 mpz_clear(zsig);
 mpz_clear(n);
@@ -500,21 +500,21 @@ mpz_clear(p);
 mpz_clear(q);
 
 /*:25*/
-#line 302 "rwb0fuz1024.w"
+#line 305 "rwb0fuz1024.w"
 
 
 return 0;
 }
 
 /*:14*/
-#line 277 "rwb0fuz1024.w"
+#line 280 "rwb0fuz1024.w"
 
 
 /*:13*/
-#line 30 "rwb0fuz1024.w"
+#line 33 "rwb0fuz1024.w"
 
 /*29:*/
-#line 697 "rwb0fuz1024.w"
+#line 700 "rwb0fuz1024.w"
 
 int
 crypto_sign_rwb0fuz1024_gmp_open(unsigned char*m,unsigned long long*mlen,
@@ -523,7 +523,7 @@ const unsigned char*pk){
 int res= 0;
 
 /*30:*/
-#line 720 "rwb0fuz1024.w"
+#line 723 "rwb0fuz1024.w"
 
 if(smlen<BYTES)
 return-1;
@@ -538,19 +538,19 @@ const uint8_t negate= sm[BYTES-1]&1;
 const uint8_t mul_2= sm[BYTES-1]&2;
 
 /*:30*/
-#line 704 "rwb0fuz1024.w"
+#line 707 "rwb0fuz1024.w"
 
 /*31:*/
-#line 733 "rwb0fuz1024.w"
+#line 736 "rwb0fuz1024.w"
 
 mpz_t elem;
 hash(elem,sm+BYTES,smlen-BYTES);
 
 /*:31*/
-#line 705 "rwb0fuz1024.w"
+#line 708 "rwb0fuz1024.w"
 
 /*20:*/
-#line 454 "rwb0fuz1024.w"
+#line 457 "rwb0fuz1024.w"
 
 if(negate)
 mpz_neg(elem,elem);
@@ -562,10 +562,10 @@ if(negate||mul_2)
 mpz_mod(elem,elem,n);
 
 /*:20*/
-#line 706 "rwb0fuz1024.w"
+#line 709 "rwb0fuz1024.w"
 
 /*32:*/
-#line 751 "rwb0fuz1024.w"
+#line 754 "rwb0fuz1024.w"
 
 mpz_mul(zsig,zsig,zsig);
 mpz_mul(zsig,zsig,elem);
@@ -582,11 +582,11 @@ goto out;
 }
 
 /*:32*/
-#line 707 "rwb0fuz1024.w"
+#line 710 "rwb0fuz1024.w"
 
 
 *mlen= smlen-BYTES;
-memcpy(m,sm,*mlen);
+memcpy(m,sm+BYTES,*mlen);
 
 out:
 mpz_clear(zsig);
@@ -597,7 +597,7 @@ return res;
 }
 
 /*:29*/
-#line 31 "rwb0fuz1024.w"
+#line 34 "rwb0fuz1024.w"
 
 
 /*:1*/
