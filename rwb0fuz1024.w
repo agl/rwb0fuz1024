@@ -24,6 +24,9 @@ This is simply an exposition of the work of Rabin, Williams, Bernstein,
 Bleichenbacher and others. Any artifice found here is theirs, any mistakes are
 mine.
 
+The source is released into the public domain. It can be found at {\tt
+http://\-github.com/\-agl/\-rwb0fuz1024}
+
 @c
 @<Preamble@>
 @<Key generation@>
