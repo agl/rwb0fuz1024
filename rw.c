@@ -106,18 +106,16 @@ random_element(mpz_t e, int urfd, unsigned size, mpz_t n) {
 }
 
 // -----------------------------------------------------------------------------
-// Return non-zero iff e is a quadratic residue mod p
+// Return non-zero iff @e is a quadratic residue mod @p
+//
+// power: (@p + 1) / 4
 // -----------------------------------------------------------------------------
 static int
-is_quadratic_residue(mpz_t e, mpz_t p) {
-  mpz_t power, emod;
+is_quadratic_residue(mpz_t e, mpz_t p, mpz_t power) {
+  mpz_t emod;
 
   mpz_init(emod);
   mpz_mod(emod, e, p);
-
-  mpz_init_set(power, p);
-  mpz_add_ui(power, power, 1);
-  mpz_cdiv_q_2exp(power, power, 2);
 
   mpz_t r;
   mpz_init(r);
@@ -128,54 +126,9 @@ is_quadratic_residue(mpz_t e, mpz_t p) {
 
   const int result = 0 == mpz_cmp(r, emod);
   mpz_clear(r);
-  mpz_clear(power);
   mpz_clear(emod);
 
   return result;
-}
-
-// -----------------------------------------------------------------------------
-// Calculate and return (u, v) such that uq + vq == 1
-// -----------------------------------------------------------------------------
-static void
-xgcd(mpz_t u, mpz_t v, mpz_t ip, mpz_t iq) {
-  mpz_t p, q;
-  mpz_init_set(p, ip);
-  mpz_init_set(q, iq);
-
-  mpz_init_set_ui(u, 1);
-  mpz_init_set_ui(v, 0);
-
-  mpz_t x, y;
-  mpz_init_set_ui(x, 0);
-  mpz_init_set_ui(y, 1);
-
-  mpz_t s, t;
-  mpz_init(s);
-  mpz_init(t);
-
-  while (mpz_sgn(q)) {
-    mpz_set(t, q);
-    mpz_fdiv_qr(s, q, p, q);
-    mpz_set(p, t);
-
-    mpz_set(t, x);
-    mpz_mul(x, s, x);
-    mpz_sub(x, u, x);
-    mpz_set(u, t);
-
-    mpz_set(t, y);
-    mpz_mul(y, s, y);
-    mpz_sub(y, v, y);
-    mpz_set(v, t);
-  }
-
-  mpz_clear(p);
-  mpz_clear(q);
-  mpz_clear(x);
-  mpz_clear(y);
-  mpz_clear(s);
-  mpz_clear(t);
 }
 
 // -----------------------------------------------------------------------------
@@ -349,11 +302,12 @@ main() {
     mpz_mul(zsigcopy, zsigcopy, zsigcopy);
     mpz_mul(zsigcopy, zsigcopy, e);
     mpz_mod(zsigcopy, zsigcopy, n);
+    if (0 == mpz_sgn(zsigcopy))
+      abort();
 
-    mpz_sqrt(t, zsigcopy);
-    mpz_mul(t2, t, t);
+    mpz_sqrtrem(t, t2, zsigcopy);
 
-    if (mpz_cmp(t2, zsigcopy))
+    if (mpz_sgn(t2))
       abort();
   }
 
