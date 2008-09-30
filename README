@@ -6,10 +6,10 @@ to provide high speed verification and small signatures. Key points:
   2. Small(er) signatures: signatures are half the size of RSA signatures for
      the same key strength.
   3. A hash generic attack is provably equivalent to factoring.
-     This scheme is parameterised over the length of the public key which will
-     be referred to as s in this text.
 
-The code itself assumes s = 1024, although this is easy to change.
+This scheme is parameterised over the length of the public key which will be
+referred to as s in this text.  The code itself assumes s = 1024, although this
+is easy to change.
 
 This is simply an exposition of the work of Rabin, Williams, Bernstein,
 Bleichenbacher and others. Any artifice found here is theirs, any mistakes are
