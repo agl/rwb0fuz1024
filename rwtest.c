@@ -54,7 +54,7 @@ main(int argc, char **argv) {
                                 input, sizeof(input), sk);
   }
   end_time = time_now();
-  fprintf(stderr, "  time: %f\n", ((double) (end_time - start_time)) / sign_its);
+  fprintf(stderr, "  time: %fus\n", ((double) (end_time - start_time)) / sign_its);
 
   fprintf(stderr, "Verifying...\n");
 
@@ -65,7 +65,7 @@ main(int argc, char **argv) {
       abort();
   }
   end_time = time_now();
-  fprintf(stderr, "  time: %f\n", ((double) (end_time - start_time)) / verify_its);
+  fprintf(stderr, "  time: %fus\n", ((double) (end_time - start_time)) / verify_its);
 
   return 0;
 }
