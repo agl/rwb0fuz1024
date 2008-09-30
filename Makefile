@@ -8,7 +8,6 @@ rwb0fuz1024.c: rwb0fuz1024.w
 	ctangle rwb0fuz1024.w
 
 rwb0fuz1024.o: rwb0fuz1024.c
-	ctangle rwb0fuz1024.w
 	gcc -Wall -c rwb0fuz1024.c -std=c99 -O2
 
 rwtest: rwb0fuz1024.o rwtest.c devurandom.c
