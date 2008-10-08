@@ -1,0 +1,214 @@
+<?xml version="1.0"?>
+<!DOCTYPE rfc SYSTEM "rfc2629.dtd"[
+ <!ENTITY RFC2119 PUBLIC '' 'http://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml'>
+ <!ENTITY RFC0768 PUBLIC '' 'http://xml.resource.org/public/rfc/bibxml/reference.RFC.0768.xml'>
+ <!ENTITY RFC4033 PUBLIC '' 'http://xml.resource.org/public/rfc/bibxml/reference.RFC.4033.xml'>
+]>
+
+<?rfc toc="yes" symrefs="yes"?>
+
+<rfc ipr="full3978" docName="draft-agl-dnsext-rwb0fuz-00">
+  <front>
+    <title abbrev="SYNACK Payloads">Rabin-Williams signatures in the Domain Name System</title>
+    <author initials="A." surname="Langley" fullname="Adam Langley">
+      <organization>Google Inc</organization>
+      <address>
+        <email>agl@google.com</email>
+      </address>
+    </author>
+    <date month="Oct" year="2008" />
+    <area>Internet</area>
+    <keyword>DNSSEC</keyword>
+    <keyword>Cryptography</keyword>
+
+    <abstract>
+      <t>This document describes how to use Rabin-Williams public keys and
+        signatures in <xref target="RFC4033">DNSSEC</xref>. Rabin-Williams
+        signatures provide for faster verification and smaller signatures than
+        an equivalent RSA scheme, yet a hash-generic attack is provably
+        equivalent to factoring.</t>
+    </abstract>
+  </front>
+
+  <middle>
+    <section title="Requirements Notation">
+<t>
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL",
+   "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY",
+   and "OPTIONAL" in this document are to be interpreted as
+   described in <xref target="RFC2119">RFC 2119</xref>.
+</t>
+    </section>
+
+<section anchor="intro" title="Introduction">
+
+  <t><xref target="RFC4033">DNSSEC</xref> seeks to secure the Domain Name System
+    by using signatures that are precomputable to avoid requiring nameservers
+    to perform a public key operation for each request. Thus, for
+    <xref target="RFC4033">DNSSEC</xref>, verification speed is vastly more
+    important than signing speed.</t>
+
+  <t>However, <xref target="RFC4033">DNSSEC</xref> still uses <xref
+      target="RFC0768">UDP</xref> as the primary transport layer protocol and,
+    despite increasing the maximum payload size, large signatures are
+    problematic both because of bandwidth and because of the amplification
+    possibilities in a denial of service attack.</t>
+
+  <t>This would suggest that elliptic curve signature schemes should be
+    attractive. By using a group of points of an elliptic curve rather than a
+    multiplicative group, index calculus (and related) attacks are much less
+    effective and a smaller group is still sufficiently secure.</t>
+
+  <t>Using the ECDSA scheme on the NIST P192 curve results in 384-bit
+    signatures. However, the verification operation is <eref
+      target="http://bench.cr.yp.to">nearly 25x slower</eref> than 1024-bit RSA (2.33GHz
+    Core2).</t>
+
+  <t>A 1024-bit Rabin-Williams scheme (B=0, fixed, unprincipled, compressed)
+    results in 520-bit signatures and the verification speed is about 4x faster
+    than 1024-bit RSA. Due to Bernstein <xref target="rwtight"/>, we have a proof
+    that a hash generic attack on such a scheme is equivalent to factoring.</t>
+
+</section>
+
+<section title="The rwb0fuz scheme">
+  <t>This section gives a brief description of the specific Rabin-Williams
+    scheme used. For a much more complete description, see <xref
+      target="rwb0fuz1024"/>. For background see <xref target="rwtight"/> <xref
+      target="williams"/> <xref target="sigz"/>.</t>
+
+  <t>Let <spanx style="emph">s</spanx> be the security parameter for a given instance of the scheme; 1024
+    is a reasonable value.</t>
+
+  <t>Let <spanx style="emph">p</spanx> be a prime in 3 + 8Z. Let <spanx style="emph">q</spanx> be a prime in 7 + 8Z, each about <spanx style="emph">s</spanx>/2 bits
+    long. The public key is <spanx style="emph">n</spanx> = <spanx style="emph">pq</spanx>.  In order to avoid an additional reduction
+    in verification, we also require that <spanx style="emph">n</spanx> > 2^{s-8}.</t>
+
+  <t>To sign a message M, we first have to find it's corresponding value in
+    Z/pqZ.</t>
+
+  <t>Let H_x(M) be a hash function from arbitrary byte strings to bytestrings of
+    length <spanx style="emph">x</spanx> bits. Here H_x(M) is defined as:</t>
+
+  <t>h_0 = <spanx style="emph">SHA512</spanx>(M | <spanx style="verb">0x00000000</spanx>), h_1 = <spanx style="verb">SHA512</spanx>(h_0 | <spanx style="verb">0x00000001</spanx>), h_i =
+    <spanx style="verb">SHA512</spanx>(h_{i-1} | <spanx style="verb">U32BE</spanx>(i))</t>
+
+  <t>The h_i's are concatenated until >= <spanx style="emph">x</spanx> bits have been generated, then are
+    truncated to <spanx style="emph">x</spanx> bits. For example, for H_1024(M), <spanx style="verb">SHA512</spanx><xref target="SHA2"/> is run twice.</t>
+
+  <t>Convert the resulting bytestring into an element of Z/pqZ by clearing
+    the first byte and interpreting it as a big-endian number. Since we defined
+    <spanx style="emph">pq</spanx> > 2^{s−8} , the result must be less than <spanx style="emph">n</spanx>. Call the resulting element
+    H(M).</t>
+
+  <t>In order to sign H(M), find the unique <spanx style="emph">e</spanx> in [-1, 1] and <spanx style="emph">f</spanx> in [1, 2] such
+    that <spanx style="emph">ef</spanx>H(M) is a square modulo <spanx style="emph">n</spanx>. Pick one of the four roots, uniformly at
+    random and such that the same root is always picked when signing the same M
+    with the same key. Call the root <spanx style="emph">s</spanx>.</t>
+
+  <t>The final signature is the denominator, <spanx style="emph">v</spanx>, of the principal convergent of <spanx style="emph">s</spanx>/<spanx style="emph">n</spanx>
+    such that the denominator of the next principal convergent is > sqrt(<spanx style="emph">n</spanx>),
+    along with <spanx style="emph">e</spanx> and <spanx style="emph">f</spanx>.</t>
+
+  <t>To verify a signature (v, e, f), calculate <spanx style="emph">t</spanx> = <spanx style="emph">ef</spanx>H(M)<spanx style="emph">v</spanx>^2 modulo <spanx style="emph">n</spanx>. The
+    signature is valid iff <spanx style="emph">t</spanx> is a square in Z.</t>
+</section>
+
+<section title="Rabin-Williams Public Key Resource Records">
+  <t>Rabin-Williams keys are stored in the DNS as KEY RRs using algorithm
+    number 6.</t>
+
+  <t>The structure of the algorithm specific portion of the RDATA of such RRs
+    is a big-endian representation of <spanx style="emph">n</spanx>. The value of <spanx style="emph">n</spanx> is limited to 4096 bits
+    in length.</t>
+</section>
+
+<section title="Rabin-Williams Signature Resource Records">
+  <t>Rabin-Williams signatures are stored in the DNS as SIG RRs using algorithm
+    number 6.</t>
+
+  <t>The structure of the algorithm specific portion of the RDATA of such
+    RRs is a big-endian representation of <spanx style="emph">v</spanx> followed by a single byte. The LSB
+    of that byte is true iff <spanx style="emph">e</spanx> = -1. The next least significant bit is true iff
+    <spanx style="emph">f</spanx> = 2. All others bits are reserved and MUST be
+    ignored by verifiers and MUST be set to false by signers.</t>
+</section>
+
+<section title="Security Considerations">
+
+  <t>It is estimated that a 1024-bit modulus, as recommended here, can be
+    factored in about a year with around a billion dollars of commodity
+    hardware. When choosing the modulus size, the risk of factoring must be
+    weighed against the cost of larger signatures.</t>
+
+</section>
+
+<section title="IANA Considerations">
+
+  <t>The DNSSEC algorithm number 6 is allocated for Rabin-Williams/SHA512 SIG
+    RRs and Rabin-Williams KEY RRs.</t>
+
+</section>
+
+<section title="Acknowledgements">
+  <t>Thanks to Daniel Bleichenbacher and Moti Yung for reviews and
+    comments of the cryptographic elements of this document.</t>
+</section>
+
+</middle>
+
+  <back>
+    <references title="Informative References">
+
+      &RFC0768;
+      &RFC4033;
+      &RFC2119;
+
+      <reference anchor="rwtight">
+        <front>
+          <title>Proving tight security for Rabin-Williams signatures</title>
+          <author initials="D.J." surname="Bernstein">
+            <organization>UIC</organization>
+          </author>
+          <date month="April" year="2008" />
+        </front>
+      </reference>
+
+      <reference anchor="williams">
+        <front>
+          <title>A modification of the RSA public key encryption procedure</title>
+          <author initials="H.C." surname="Williams"> <organization/> </author>
+          <date year="1980" />
+        </front>
+      </reference>
+
+      <reference anchor="sigz">
+        <front>
+          <title>Compressing Rabin Signatures</title>
+          <author initials="D." surname="Bleichenbacher"> <organization/> </author>
+          <date year="2004" />
+        </front>
+      </reference>
+
+      <reference anchor="rwb0fuz1024">
+        <front>
+          <title>A Rabin-Williams Signature Scheme</title>
+          <author initials="A.G." surname="Langley"> <organization>Google Inc</organization> </author>
+          <date year="2008" />
+        </front>
+      </reference>
+
+      <reference anchor="SHA2">
+        <front>
+          <title>FIPS PUB 180-2 'Specifications for the Secure Hash Standard'</title>
+          <author> <organization>NIST</organization> </author>
+          <date month="August" year="2002" />
+        </front>
+      </reference>
+
+    </references>
+
+    <section title="Changes">
+    </section>
+  </back>
+</rfc>
