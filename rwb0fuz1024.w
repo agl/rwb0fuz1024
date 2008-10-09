@@ -10,8 +10,8 @@
 This is example code for a Rabin-Williams public-key signature scheme designed to
 provide high speed verification and small signatures. Key points:
 
-\item{1.} Fast verification: about $7\mu s$ for a short message on a 2.33GHz Core2
-(1024 bit key). RSA 1024 on the same hardware is about 4x slower.
+\item{1.} Fast verification: about $7\mu s$ for a short message on a 2.33GHz Core 2
+using 1024 bit keys. RSA, also using 1024-bit keys on the same hardware, is about 4x slower.
 \item{2.} Small(er) signatures: signatures are half the size of RSA
 signatures for the same key strength.
 \item{3.} A hash generic attack is provably equivalent to factoring.
@@ -47,7 +47,7 @@ this author prefers to |unsigned char|.
 @ Preamble
 
 We use the GNU Multiple Precision Arithmetic Library (GMP, {\tt http://gmplib.org}) for integer
-functions and OpenSSL for its SHA512 implementation. This code follows the eBACS API for
+functions and OpenSSL for its SHA-512 implementation. This code follows the eBACS API for
 signature schemes ({\tt http://bench.cr.yp.to}).
 
 Use of GMP may be problematic for some as it doesn't handle
@@ -95,8 +95,9 @@ primality test with 32 iterations thus bounding the probability of returning a
 composite $\le 2^{-64}$.
 
 This function generates a random prime, $p$ at most |size| bits long and
-such that $p\equiv$ |mod8| mod 8. The result is written to |n|, which should not
-be initialised upon entry. |size| must be less than 2049.
+such that $p\equiv |mod8| \pmod{8}$. The result is written to |n|, which should not
+be initialised upon entry. |size| must be $\le 2048$ and a positive multiple of
+8.
 
 @<Random pr...@>=
 static void
@@ -104,28 +105,17 @@ init_random_prime(mpz_t n, unsigned size, unsigned mod8) {
   uint8_t buffer[256];
   const unsigned bytes = size >> 3;
 
-  if (bytes > sizeof(buffer))
+  if (bytes == 0 || bytes > sizeof(buffer))
     abort();
 
-  mpz_init2(n, bytes);
+  mpz_init2(n, size);
 
   for (;;) {
     randombytes(buffer, bytes);
 
+    buffer[bytes - 1] &= ~7;
+    buffer[bytes - 1] |= mod8;
     mpz_import(n, bytes, 1, 1, 0, 0, buffer);
-    mpz_setbit(n, 0);
-
-    if (mod8 & 2) {
-      mpz_setbit(n, 1);
-    } else {
-      mpz_clrbit(n, 1);
-    }
-
-    if (mod8 & 4) {
-      mpz_setbit(n, 2);
-    } else {
-      mpz_clrbit(n, 2);
-    }
 
     if (mpz_probab_prime_p(n, 32))
       break;
@@ -136,7 +126,7 @@ init_random_prime(mpz_t n, unsigned size, unsigned mod8) {
 
 The |keypair| function generates a keypair and stores the public key in {\tt
 pk[0]}, {\tt pk[1]}, $\ldots$, {\tt pk[PUBLIC\-KEY\-BYTES - 1]}, stores the
-secret key in {\tt sk[0]}, {\tt sk[1]}, $\ldots$, {\tt sk[SECRETKEYBYTES\_ -
+secret key in {\tt sk[0]}, {\tt sk[1]}, $\ldots$, {\tt sk[SECRETKEYBYTES\- -
 1]} and returns 0.
 
 @<Key pair func...@>=
@@ -156,7 +146,7 @@ crypto_sign_rwb0fuz1024_gmp_keypair(uint8_t *pk, uint8_t *sk) {
 @ Picking primes
 
 We generate a pair of 512-bit primes, $p$ and $q$ where $p \in 3 + 8\bbbZ$ and
-$q \in 7 + 8\bbbZ$. We also test that $n=pq > 2^{1016}$ by looking for a true bit
+$q \in 7 + 8\bbbZ$. We also test that $n=pq > 2^{1024 - 8}$ by looking for a true bit
 in the top 8 bits of $n$.
 
 @<Pick primes@>=
@@ -166,13 +156,13 @@ in the top 8 bits of $n$.
     mpz_init(n);
     mpz_mul(n, p, q);
 
-    if (mpz_scan1(n, 1024 - 8) == ULONG_MAX) {
-      mpz_clear(n);
-      mpz_clear(p);
-      mpz_clear(q);
-    } else {
+    if (mpz_scan1(n, 1024 - 8) != ULONG_MAX) {
       break;
     }
+
+    mpz_clear(n);
+    mpz_clear(p);
+    mpz_clear(q);
   }
 
 @ Precomputing values for the Chinese remainder theorem
@@ -339,11 +329,11 @@ We need to turn the input message into an element in $\bbbZ/pq\bbbZ$.
 Let $H_x(m)$ be a hash function from arbitrary length bytestrings to
 bytestrings of length $x$ bits. Here $H_x(m)$ is defined as
 
-$\eqalign{h_0 &= |SHA512|(m \mid |0x00000000|) \cr
-          h_1 &= |SHA512|(h_0 \mid |0x00000001|) \cr
-          h_i &= |SHA512|(h_{i-1} \mid |u32be(i)|)}$
+$\eqalign{h_0 &= |SHA512|(m \parallel |0x00000000|) \cr
+          h_1 &= |SHA512|(h_0 \parallel |0x00000001|) \cr
+          h_i &= |SHA512|(h_{i-1} \parallel |u32be(i)|)}$
 
-The $h_i$s are concatenated until $>= x$ bits have been generated, then
+The $h_i$s are concatenated until $\ge x$ bits have been generated, then
 truncated to $x$ bits. For example, for $H_{1024}(m)$, {\tt SHA512} is run
 twice. This is very similar to {\tt MGF1} from PKCS\#1.
 
@@ -433,10 +423,10 @@ $-H(m)$ is.
 
 Also, 2 is a square in a group of prime order iff the order $\in 1 + 8\bbbZ$
 or $7 + 8\bbbZ$. Since $p$ is not such a prime, 2 is not a square, and
-non-square $*$ non-square is a square. Likewise, 2 is a square in $\bbbZ/q\bbbZ$
-and square $*$ square is a square. Thus multiplying by 2 converts [N,Y]
+non-square $\times$ non-square is a square. Likewise, 2 is a square in $\bbbZ/q\bbbZ$
+and square $\times$ square is a square. Thus multiplying by 2 converts [N,Y]
 into [Y,Y]. For the same reasons it also converts [Y,N] into [N,N] since
-non-square $*$ square = non-square.
+non-square $\times$ square = non-square.
 
 @<Calculate tweaks@>=
   int mul_2 = 0, negate = 0;
@@ -559,7 +549,7 @@ and the next most significant bit is 1 iff $f = 2$.
 @ Testing for quadratic residues
 
 A quadratic residue (often also called a `square' in this document) is a number
-$e$ such that there exists $x$ where $x^2 \equiv a \pmod{p}$.
+$e$ such that there exists $x$ where $x^2 \equiv e \pmod{p}$.
 
 Since both our primes are $\in 3 + 4\bbbZ$, we can test simply for this by
 calculating the square root $x=a^{(p+1)/4} \pmod{p}$ and then squaring it to
@@ -602,24 +592,27 @@ static uint8_t
 HMAC_SHA512(const uint8_t *key,
             const uint8_t *value, unsigned valuelen) {
   unsigned i;
-  uint8_t keycopy[8];
+  uint8_t keycopy[128];
+
+  for (i = 0; i < 128; ++i)
+    keycopy[i] = 0x5c;
 
   for (i = 0; i < 8; ++i)
-    keycopy[i] = key[i] ^ 0x5c;
+    keycopy[i] ^= key[i];
 
   SHA512_CTX shactx;
   SHA512_Init(&shactx);
-  SHA512_Update(&shactx, keycopy, 8);
+  SHA512_Update(&shactx, keycopy, 128);
   SHA512_Update(&shactx, value, valuelen);
 
   uint8_t t[64];
   SHA512_Final(t, &shactx);
 
-  for (i = 0; i < 8; ++i)
-    keycopy[i] ^= 0x6a;
+  for (i = 0; i < 128; ++i)
+    keycopy[i] ^= (0x5c ^ 0x36);
 
   SHA512_Init(&shactx);
-  SHA512_Update(&shactx, keycopy, 8);
+  SHA512_Update(&shactx, keycopy, 128);
   SHA512_Update(&shactx, t, sizeof(t));
   SHA512_Final(t, &shactx);
 
