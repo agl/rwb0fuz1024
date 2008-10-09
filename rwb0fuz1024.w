@@ -761,4 +761,4 @@ uninteresting. Thus, we actually need only check that $t\ne 0$.
 
 @* Acknowledgements.
 
-Thanks to Daniel Bleichenbacher and Moti Yung for reviews and comments.
+Thanks to Daniel Bleichenbacher, Moti Yung and Matthew Dempsky for reviews and comments.
